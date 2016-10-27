@@ -1,0 +1,41 @@
+#!/usr/bin/ruby
+require 'net/http'
+require 'json'
+
+API_KEY = 'dc6zaTOxFJmzC'
+
+def to_words(input)
+  input.
+    split(" ").
+    select{|term| term.match(/^\w+$/)}
+end
+
+def search_string(input)
+  to_words(input).join("+")
+end
+
+def humanized_string(input)
+  to_words(input).join(" ")
+end
+
+def get_url(input)
+  uri = URI("http://api.giphy.com/v1/gifs/search?q=#{search_string(input)}&api_key=#{API_KEY}&rating=r")
+  response = JSON.parse Net::HTTP.get(uri)
+  response["data"].sample["images"]["original"]["url"]
+end
+
+def open_gif(input)
+  system("say Here is #{humanized_string(input)} &")
+  image_url = get_url(input)
+  system("open #{image_url} &")
+end
+
+while true
+  input = File.read("input")
+  if !input.empty?
+    open_gif(input)
+    puts "Clearing file"
+    File.open("input", "w") {}
+  end
+  sleep 0.1
+end
